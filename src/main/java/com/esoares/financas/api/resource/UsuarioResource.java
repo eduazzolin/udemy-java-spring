@@ -4,20 +4,23 @@ import com.esoares.financas.api.dto.UsuarioDTO;
 import com.esoares.financas.exception.ErroAutenticacao;
 import com.esoares.financas.exception.RegraNegocioException;
 import com.esoares.financas.model.entity.Usuario;
+import com.esoares.financas.service.LancamentoService;
 import com.esoares.financas.service.UsuarioService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
+import java.util.Optional;
+
 @RestController
 @RequestMapping("/api/usuarios")
+@RequiredArgsConstructor
 public class UsuarioResource {
 
-   private UsuarioService service;
-
-   public UsuarioResource(UsuarioService service) {
-      this.service = service;
-   }
+   private final UsuarioService service;
+   private final LancamentoService lancamentoService;
 
    @PostMapping
    public ResponseEntity salvar(@RequestBody UsuarioDTO dto) {
@@ -41,6 +44,16 @@ public class UsuarioResource {
       } catch (ErroAutenticacao e) {
          return ResponseEntity.badRequest().body(e.getMessage());
       }
+   }
+
+   @GetMapping("{id}/saldo")
+   public ResponseEntity obterSaldo(@PathVariable("id") Long id) {
+      Optional<Usuario> usuario = service.obterPorId(id);
+      if (usuario.isEmpty()) {
+         return new ResponseEntity(HttpStatus.NOT_FOUND);
+      }
+      BigDecimal saldo = lancamentoService.obterSaldoPorUsuario(id);
+      return ResponseEntity.ok(saldo);
    }
 
 }

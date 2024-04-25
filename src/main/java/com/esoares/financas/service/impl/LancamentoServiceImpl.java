@@ -3,6 +3,7 @@ package com.esoares.financas.service.impl;
 import com.esoares.financas.exception.RegraNegocioException;
 import com.esoares.financas.model.entity.Lancamento;
 import com.esoares.financas.model.enums.StatusLancamento;
+import com.esoares.financas.model.enums.TipoLancamento;
 import com.esoares.financas.model.repository.LancamentoRepository;
 import com.esoares.financas.service.LancamentoService;
 import org.springframework.data.domain.Example;
@@ -13,13 +14,14 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 @Service
 public class LancamentoServiceImpl implements LancamentoService {
 
    private final LancamentoRepository repository;
 
-   private LancamentoServiceImpl(LancamentoRepository repository) {
+   public LancamentoServiceImpl(LancamentoRepository repository) {
       this.repository = repository;
    }
 
@@ -80,5 +82,27 @@ public class LancamentoServiceImpl implements LancamentoService {
       if (lancamento.getTipo() == null) {
          throw new RegraNegocioException("Informe um Tipo de lançamento válido.");
       }
+   }
+
+   @Override
+   public Optional<Lancamento> obterPorId(Long id) {
+      Optional<Lancamento> lancamento = repository.findById(id);
+      return lancamento;
+   }
+
+   @Override
+   @Transactional
+   public BigDecimal obterSaldoPorUsuario(Long id) {
+      BigDecimal receitas = repository.obterSaldoPorTipoLancamentoEUsuario(id, TipoLancamento.RECEITA);
+      BigDecimal despesas = repository.obterSaldoPorTipoLancamentoEUsuario(id, TipoLancamento.DESPESA);
+
+      if(receitas == null) {
+         receitas = BigDecimal.ZERO;
+      }
+      if(despesas == null) {
+         despesas = BigDecimal.ZERO;
+      }
+
+      return receitas.subtract(despesas);
    }
 }
