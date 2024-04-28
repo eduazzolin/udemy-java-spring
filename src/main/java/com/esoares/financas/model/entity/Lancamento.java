@@ -3,7 +3,10 @@ package com.esoares.financas.model.entity;
 import com.esoares.financas.model.enums.StatusLancamento;
 import com.esoares.financas.model.enums.TipoLancamento;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -11,6 +14,9 @@ import java.time.LocalDate;
 @Table(name = "lancamento")
 @Entity
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Lancamento {
 
    @Id
