@@ -13,8 +13,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.HttpClientErrorException;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -31,12 +31,14 @@ public class LancamentoResource {
            @RequestParam(value = "descricao", required = false) String descricao,
            @RequestParam(value = "mes", required = false) Integer mes,
            @RequestParam(value = "ano", required = false) Integer ano,
+           @RequestParam(value = "tipo", required = false) TipoLancamento tipo,
            @RequestParam(value = "usuario") Long idUsuario) {
 
       Lancamento lancamentoFiltro = new Lancamento();
       lancamentoFiltro.setDescricao(descricao);
       lancamentoFiltro.setMes(mes);
       lancamentoFiltro.setAno(ano);
+      lancamentoFiltro.setTipo(tipo);
 
       Optional<Usuario> usuario = usuarioService.obterPorId(idUsuario);
       if (usuario.isEmpty()) {
@@ -52,7 +54,7 @@ public class LancamentoResource {
 
    @PutMapping("{id}/atualiza-status")
    public ResponseEntity atualizarStatus(@PathVariable("id") Long id, @RequestBody AtualizaStatusDTO dto) {
-      return service.obterPorId(id).map( entity ->{
+      return service.obterPorId(id).map(entity -> {
          StatusLancamento statusSelecionado = null;
          try {
             statusSelecionado = StatusLancamento.valueOf(dto.getStatus());
@@ -73,12 +75,33 @@ public class LancamentoResource {
    public ResponseEntity salvar(@RequestBody LancamentoDTO dto) {
       try {
          Lancamento entidade = converter(dto);
+         entidade.setDataCadastro(LocalDate.now());
          entidade = service.salvar(entidade);
          return new ResponseEntity(entidade, HttpStatus.CREATED);
       } catch (RegraNegocioException e) {
          return ResponseEntity.badRequest().body(e.getMessage());
       }
 
+   }
+
+   @GetMapping("{id}")
+   public ResponseEntity obterLancamento(@PathVariable("id") Long id) {
+      return service.obterPorId(id)
+              .map(lancamento -> new ResponseEntity(converter(lancamento), HttpStatus.OK))
+              .orElseGet(() -> new ResponseEntity(HttpStatus.NOT_FOUND));
+   }
+
+   private LancamentoDTO converter(Lancamento lancamento) {
+      return LancamentoDTO.builder()
+              .id(lancamento.getId())
+              .descricao(lancamento.getDescricao())
+              .valor(lancamento.getValor())
+              .mes(lancamento.getMes())
+              .ano(lancamento.getAno())
+              .usuario(lancamento.getUsuario().getId())
+              .tipo(lancamento.getTipo().name())
+              .status(lancamento.getStatus().name())
+              .build();
    }
 
    @PutMapping("{id}")

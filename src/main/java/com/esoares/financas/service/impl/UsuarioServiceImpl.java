@@ -5,6 +5,7 @@ import com.esoares.financas.exception.RegraNegocioException;
 import com.esoares.financas.model.entity.Usuario;
 import com.esoares.financas.model.repository.UsuarioRepository;
 import com.esoares.financas.service.UsuarioService;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,10 +16,12 @@ public class UsuarioServiceImpl implements UsuarioService {
 
 
    private UsuarioRepository repository;
+   private final PasswordEncoder encoder;
 
-   public UsuarioServiceImpl(UsuarioRepository repository) {
+   public UsuarioServiceImpl(UsuarioRepository repository, PasswordEncoder encoder) {
       super();
       this.repository = repository;
+      this.encoder = encoder;
    }
 
    @Override
@@ -29,7 +32,10 @@ public class UsuarioServiceImpl implements UsuarioService {
          throw new ErroAutenticacao("Usuário não encontrado.");
       }
 
-      if(!usuario.get().getSenha().equals(senha)){
+      boolean senhasBatem = encoder.matches(senha, usuario.get().getSenha());
+
+
+      if(!senhasBatem){
          throw new ErroAutenticacao("Senha inválida.");
       }
 
@@ -40,7 +46,14 @@ public class UsuarioServiceImpl implements UsuarioService {
    @Transactional
    public Usuario salvarUsuario(Usuario usuario) {
       validarEmail(usuario.getEmail());
+      criptografarSenha(usuario);
       return repository.save(usuario);
+   }
+
+   private void criptografarSenha(Usuario usuario) {
+      String senha = usuario.getSenha();
+      String senhaCriptografada = encoder.encode(senha);
+      usuario.setSenha(senhaCriptografada);
    }
 
    @Override
