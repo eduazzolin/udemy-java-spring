@@ -9,7 +9,6 @@ import com.esoares.financas.model.enums.StatusLancamento;
 import com.esoares.financas.model.enums.TipoLancamento;
 import com.esoares.financas.service.LancamentoService;
 import com.esoares.financas.service.UsuarioService;
-import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
